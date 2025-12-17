@@ -13,7 +13,7 @@ export async function POST(req: Request) {
 
   const isMatch = await bcrypt.compare(password, user.password);
   if (!isMatch) return NextResponse.json({ error: "Invalid" }, { status: 401 });
-
+    
   const token = signToken({ id: user._id, email });
 
   return NextResponse.json({ token, name: user.name });

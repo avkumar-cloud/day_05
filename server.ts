@@ -1,8 +1,10 @@
+import "dotenv/config";
+
 import { createServer } from "http";
 import { Server } from "socket.io";
 import next from "next";
 import mongoose from "mongoose";
-import Message from "@/models/Message";
+import Message from "./src/models/Message.js";
 
 const app = next({ dev: true });
 const handler = app.getRequestHandler();
@@ -16,8 +18,11 @@ app.prepare().then(() => {
 
   mongoose.connect(process.env.MONGODB_URI!);
 
-  io.on("connection", (socket) => {
+  io.on("connection", async(socket) => {
     console.log("User connected");
+
+    const messages = await Message.find().sort({ createdAt: 1 }).limit(50);
+    socket.emit("loadMessages", messages);
 
     socket.on("sendMessage", async (data) => {
       const msg = await Message.create(data);

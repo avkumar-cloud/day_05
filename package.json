@@ -2,14 +2,15 @@
   "name": "day_05",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
-    "dev": "next dev",
+   "dev": "nodemon --exec node --loader ts-node/esm server.ts",
     "build": "next build",
-    "start": "next start",
     "lint": "eslint"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
+    "dotenv": "^17.2.3",
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.0.1",
     "next": "16.0.10",
@@ -20,12 +21,15 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.0.10",
+    "nodemon": "^3.1.11",
     "tailwindcss": "^4",
+    "ts-node": "^10.9.2",
     "typescript": "^5"
   }
 }

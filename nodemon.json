@@ -1,0 +1,7 @@
+{
+  "nodemonConfig": {
+    "watch": ["server.ts", "models", "lib"],
+    "ext": "ts",
+    "exec": "node --loader ts-node/esm server.ts"
+  }
+}

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { io } from "socket.io-client";
 import { useAuth } from "@/context/AuthContext";
 
-const socket = io(process.env.SOCKET_URL!);
+const socket = io(process.env.NEXT_PUBLIC_SOCKET_URL!);
 
 export default function ChatPage() {
   const { user } = useAuth();
@@ -12,14 +12,18 @@ export default function ChatPage() {
   const [messages, setMessages] = useState<any[]>([]);
 
   useEffect(() => {
-    socket.on("newMessage", (msg) => {
-      setMessages((prev) => [...prev, msg]);
-    });
+    const handleLoadMessages = (msgs) => setMessages(msgs);
+  const handleNewMessage = (msg) => setMessages(prev => [...prev, msg]);
 
-    return () => {
-      socket.off("newMessage");
-    };
-  }, []);
+  socket.on("loadMessages", handleLoadMessages);
+  socket.on("newMessage", handleNewMessage);
+
+  return () => {
+    socket.off("loadMessages", handleLoadMessages);
+    socket.off("newMessage", handleNewMessage);
+  };
+  },[]);   
+  
 
   const sendMessage = () => {
     if (!message || !user.name) return;

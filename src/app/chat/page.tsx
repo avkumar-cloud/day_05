@@ -12,7 +12,7 @@ export default function ChatPage() {
   const [messages, setMessages] = useState<any[]>([]);
 
   useEffect(() => {
-    const handleLoadMessages = (msgs) => setMessages(msgs);
+  const handleLoadMessages = (msgs) => setMessages(msgs);
   const handleNewMessage = (msg) => setMessages(prev => [...prev, msg]);
 
   socket.on("loadMessages", handleLoadMessages);
@@ -39,7 +39,7 @@ export default function ChatPage() {
   return (
     <div className="min-h-screen bg-gray-100 flex justify-center items-center">
       <div className="bg-white w-full max-w-2xl rounded-xl shadow-lg flex flex-col">
-        <div className="p-4 border-b font-semibold">💬 Chat</div>
+        <div className="p-4 border-b font-semibold">💬 Global Chat Window</div>
 
         <div className="flex-1 p-4 space-y-2 overflow-y-auto">
           {messages.map((m, i) => (

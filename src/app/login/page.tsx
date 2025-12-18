@@ -30,9 +30,7 @@ export default function LoginPage() {
     if(!res.ok){
         setError(data.error || "Invalid email or password");
         return;
-    }
-        console.log(data);
-        
+    }        
       login(data.token, data.name)
       router.push("/chat"); 
     } catch (error) {

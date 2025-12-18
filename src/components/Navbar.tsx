@@ -4,8 +4,9 @@ import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 
 export default function Navbar() {
-  const { user, logout } = useAuth();
-
+  const { user,token, logout } = useAuth();
+  console.log('user',user);
+  
   return (
     <nav className="w-full bg-black text-white px-6 py-4 flex justify-between items-center">
       <Link href="/" className="font-bold text-lg">
@@ -13,7 +14,7 @@ export default function Navbar() {
       </Link>
 
       <div className="flex items-center gap-4">
-        {!user.token ? (
+        {!token ? (
           <>
             <Link href="/login" className="hover:underline">
               Login
@@ -25,7 +26,7 @@ export default function Navbar() {
         ) : (
           <>
             <span className="text-sm text-gray-300">
-              Hi, {user.name}
+              Hi, {user?.name}
             </span>
             <button
               onClick={logout}

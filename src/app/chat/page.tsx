@@ -1,78 +1,107 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { io } from "socket.io-client";
+import { io, Socket } from "socket.io-client";
 import { useAuth } from "@/context/AuthContext";
+import Sidebar from "@/components/Sidebar";
+import PrivateChat from "@/components/PrivateChat";
 
-const socket = io(process.env.NEXT_PUBLIC_SOCKET_URL!);
+type User = {
+  _id: string;
+  name: string;
+  email?: string;
+};
+
+type Message = {
+  _id: string;
+  sender: string;
+  receiver: string;
+  text: string;
+};
 
 export default function ChatPage() {
   const { user } = useAuth();
-  const [message, setMessage] = useState("");
-  const [messages, setMessages] = useState<any[]>([]);
+  const [contacts, setContacts] = useState<User[]>([]);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [socket, setSocket] = useState<Socket | null>(null);
 
+  // Initialize Socket.IO
   useEffect(() => {
-  const handleLoadMessages = (msgs) => setMessages(msgs);
-  const handleNewMessage = (msg) => setMessages(prev => [...prev, msg]);
+    const s = io(); // connect to server
+    setSocket(s);
 
-  socket.on("loadMessages", handleLoadMessages);
-  socket.on("newMessage", handleNewMessage);
+    return () => {
+      s.disconnect();
+    };
+  }, []);
 
-  return () => {
-    socket.off("loadMessages", handleLoadMessages);
-    socket.off("newMessage", handleNewMessage);
-  };
-  },[]);   
-  
+  // Load users/contacts from API
+  useEffect(() => {
+    if (!user?.id) return;
 
-  const sendMessage = () => {
-    if (!message || !user.name) return;
+    fetch("/api/users")
+      .then((res) => res.json())
+      .then((data: User[]) => {
+        // remove logged-in user from contacts
+        setContacts(data.filter((u) => u._id !== user.id));
+      });
+  }, [user]);
 
-    socket.emit("sendMessage", {
-      sender: user.name,
-      text: message,
+  // Socket listeners
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleLoadMessages = (msgs: Message[]) => setMessages(msgs);
+    const handleNewMessage = (msg: Message) =>
+      setMessages((prev) => [...prev, msg]);
+
+    socket.on("loadMessages", handleLoadMessages);
+    socket.on("newMessage", handleNewMessage);
+
+    return () => {
+      socket.off("loadMessages", handleLoadMessages);
+      socket.off("newMessage", handleNewMessage);
+    };
+  }, [socket]);
+
+  // Open private chat
+  const openChat = (contact: User) => {
+    if (!socket || !user) return;
+
+    setSelectedUser(contact);
+    setMessages([]);
+
+    socket.emit("joinRoom", {
+      senderId: user.id,
+      receiverId: contact._id
     });
-
-    setMessage("");
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex justify-center items-center">
-      <div className="bg-white w-full max-w-2xl rounded-xl shadow-lg flex flex-col">
-        <div className="p-4 border-b font-semibold">💬 Global Chat Window</div>
+    <div className="flex h-screen">
+      {/* Sidebar */}
+      <Sidebar
+        contacts={contacts}
+        selectedUser={selectedUser}
+        onSelect={openChat}
+      />
 
-        <div className="flex-1 p-4 space-y-2 overflow-y-auto">
-          {messages.map((m, i) => (
-            <div
-              key={i}
-              className={`max-w-xs px-4 py-2 rounded-lg ${
-                m.sender === user.name
-                  ? "bg-black text-white ml-auto"
-                  : "bg-gray-200"
-              }`}
-            >
-              <p className="text-xs opacity-70">{m.sender}</p>
-              <p>{m.text}</p>
-            </div>
-          ))}
-        </div>
+      {/* Private Chat */}
+      {socket && selectedUser && (
+        <PrivateChat
+          socket={socket}
+          messages={messages}
+          selectedUser={selectedUser}
+          currentUserId={user?.id}
+        />
+      )}
 
-        <div className="p-4 border-t flex gap-2">
-          <input
-            className="flex-1 border rounded-lg px-3 py-2"
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-            placeholder="Type a message..."
-          />
-          <button
-            onClick={sendMessage}
-            className="bg-black text-white px-4 py-2 rounded-lg"
-          >
-            Send
-          </button>
+      {!selectedUser && (
+        <div className="flex-1 flex items-center justify-center text-gray-500">
+          Select a contact to start chatting
         </div>
-      </div>
+      )}
     </div>
   );
 }

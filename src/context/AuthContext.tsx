@@ -4,52 +4,54 @@ import { createContext, useContext, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 type User = {
-  name: string | null;
-  token: string | null;
+  name: string ;
+  email?: string ;
+  id: string;
 };
 
 type AuthContextType = {
-  user: User;
-  login: (token: string, name: string) => void;
+  user: User | null;
+  token: string | null;
+  login: (data: { user: User; token: string }) => void;
   logout: () => void;
 };
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User>({
-    name: null,
-    token: null,
-  });
-
+  const [user, setUser] = useState<User | null>(null);
+  const [token, setToken] = useState<string | null>(null);
   const router = useRouter();
 
   // Load user on refresh
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    const name = localStorage.getItem("name");
+    const storedToken = localStorage.getItem("token");
+    const storedUser = localStorage.getItem("user");
 
-    if (token && name) {
-      setUser({ token, name });
+    if (storedToken && storedUser) {
+      setUser(JSON.parse(storedUser));
+      setToken(storedToken);
     }
   }, []);
 
-  const login = (token: string, name: string) => {
+ const login = ({ user, token }: { user: User; token: string }) => {
     localStorage.setItem("token", token);
-    localStorage.setItem("name", name);
-    setUser({ token, name });
+    localStorage.setItem("user", JSON.stringify(user));
+    setToken(token);
+    setUser(user);
     router.push("/chat");
   };
 
   const logout = () => {
     localStorage.removeItem("token");
-    localStorage.removeItem("name");
-    setUser({ token: null, name: null });
+    localStorage.removeItem("user");
+    setToken(null);
+    setUser(null);
     router.push("/login");
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout }}>
+    <AuthContext.Provider value={{ user, token,login, logout }}>
       {children}
     </AuthContext.Provider>
   );
